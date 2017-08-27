@@ -1,0 +1,196 @@
+const animate = (Target) => {
+    return class Animate extends React.Component {
+        constructor(props){
+          super(props);
+          this.state={className: 'animation'};
+        }
+        componentDidMount() {
+          this.setState({
+            className: 'animation'
+          });
+          setTimeout(()=>{
+            this.setState({
+            className: 'animation mount'
+          });
+          },1000);
+        }
+      componentWillUnmount() {
+          this.setState({
+            className: 'animation unmount'
+          });
+        setTimeout(()=>{
+            this.setState({
+            className: 'animation'
+          });
+        });
+      }
+        onClick() {
+          this.setState({
+            className: 'animation click'
+          });
+        };
+        render() {
+            const {className} = this.state;
+            return <Target onClick={this.onClick}
+                     className = {className}
+                     {...this.props}/>;
+        }
+    }
+};
+
+/*
+ * A simple React component
+ */
+const _ListItem=({
+      value,
+      done,
+      deleteCb,
+      toggleCB,
+      addCb,
+      updateCb,
+      children,
+      className
+    }) =><div className={`todoItem ${className}`} >
+                  <li contentEditable onInput={(e)=>{
+                      updateCb(e.target.innerText);
+                    }}>{value}</li>
+                  <button onClick={()=>{
+                         deleteCb(); 
+                  }}>-</button>
+            <span className= {done? 'done': 'notDone'} onClick={()=>{
+                toggleCB();
+              }}> </span>
+       <button onClick={()=>{
+                addCb();
+              }}>+</button>
+      {children}
+            </div>;
+const ListItem = animate(_ListItem);
+class Application extends React.Component {
+  constructor(props) {
+    super(props);
+    let todos;
+    try {
+      todos = JSON.parse(localStorage.getItem('todos'));
+    } catch (e) {
+      console.error('parsing error/local storage not found', e);
+
+    }
+    todos = todos || [];
+    this.state = {
+      todos: todos
+    };
+  }
+  persist() {
+    const todos = this.state.todos;
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }
+  delete(path) {
+    const todos = this.state.todos;
+    _.set(todos, path, null);
+    console.log(todos);
+    this.setState({
+      todos: [..._.compact(this.state.todos)]
+    }, () => this.persist());
+  }
+  add(value) {
+
+    this.setState({
+      todos: [...this.state.todos, {
+        index: this.state.todos.length,
+        value,
+        done: false
+      }]
+    }, () => this.persist())
+  }
+  update(value, path) {
+    console.log(value, path);
+    const todos = this.state.todos;
+    const todoI = _.get(todos, path);
+    
+    _.set(todos, path, {
+      index: todoI.index,
+      done: todoI.done,
+      childTodos: todoI.childTodos,
+      value
+    });
+    
+    this.setState({
+      todos: [...todos]
+    }, () => this.persist());
+  }
+  addChild(path, childTodos, value) {
+    const parentTodo = _.get(this.state.todos,path);
+    const todo = {value:'', done:false};
+     parentTodo.childTodos = [...(parentTodo.childTodos || []),todo];
+
+    this.setState({
+      todos: [...this.state.todos]
+    }, () => this.persist());
+  }
+
+  toggle(path) {
+    const todos = this.state.todos;
+    const todo = _.get(todos,path);
+    const modifiedTodo = {
+      ...todo,
+      done: !todo.done
+    };
+    _.set(todos, path, modifiedTodo);
+    this.setState({
+      todos: [...todos]
+    }, () => this.persist());
+  }
+
+  renderTodos = (todos, ancestorPath) => <ul>
+        {
+          todos.map((todo = {},i)=>{
+            const childTodos = _.get(todo,'childTodos');
+            const nextAncestorPath = ancestorPath? `${ancestorPath}.childTodos[${i}]`: `[${i}]`;
+            return todo && <ListItem {...todo} 
+                   deleteCb={()=>{
+                                      this.delete(nextAncestorPath); 
+                  } }
+                  toggleCB={()=>{
+                    this.toggle(nextAncestorPath);
+                  }}
+                  addCb = {
+                  ()=>{
+                    this.addChild(nextAncestorPath, todo.childTodos, this.state.value);
+                  }}
+                  updateCb = {
+                    (value)=>{
+                    this.update(value, nextAncestorPath);
+                    }
+                  }
+            
+            >{childTodos && this.renderTodos(childTodos, nextAncestorPath)}</ListItem>
+        })}
+      </ul>;
+
+  render() {
+    const {
+      todos,
+      value = ''
+    } = this.state;
+    return <div>
+      <h1>ToDos List</h1>
+      <input 
+                 type='text'
+                 value = {value}
+                  onChange = {(e)=>{
+                  this.setState({value: e.target.value});
+                  }}
+                 />
+      <button onClick={()=>{
+            this.add(value);
+          }}>+</button>
+      {this.renderTodos(todos)}
+    </div>;
+  }
+}
+
+/*
+ * Render the above component into the div#app
+ */
+ReactDOM.render(<Application />, document.getElementById('app'));

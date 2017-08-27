@@ -1,0 +1,65 @@
+#app{
+  text-align:center;
+  input{
+    width:200px;
+    background-color:lightgrey;
+    border:0;
+    height:1.2em;
+    font-size:1.5em;
+  }
+  button{
+    height:3em;
+    width:3em;
+  }
+}
+.todoItem{
+  display: flex;
+  margin-top:3px;
+  margin-left:3px; 
+  
+  >span{
+    order:-1;
+    
+  }
+  
+}
+
+.done:before{
+  content: ' ';
+  border-left: 1em solid green;
+  height: 2em;
+  display:flex;
+}
+.notDone:before{
+  content: ' ';
+  border-left: 1em solid red;
+  height: 2em;
+  display:flex;
+}
+li[contenteditable]{
+  min-width:100px;
+  background-color:lightgrey;
+  border:0;
+  height:2em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  
+}
+
+input, [contenteditable]:focus{
+  &:focus{
+    box-shadow:0px 0px 0px 0.2em grey;
+    margin:0.2em;
+  }
+}
+
+
+.mount{
+}
+.unmount{
+  
+}
+.animation{
+  transition: background 1s linear;
+}
