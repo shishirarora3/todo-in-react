@@ -1,4 +1,4 @@
 # todo-in-react
 todos tree in react
 
-[Demo](https://github.com/shishirarora3/todo-in-react/blob/master/index.html)
+[Demo](https://cdn.rawgit.com/shishirarora3/todo-in-react/5d145dbd/index.html)
